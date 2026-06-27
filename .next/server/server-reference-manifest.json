@@ -1,0 +1,14 @@
+{
+  "node": {
+    "e5437dd9675d045246e76080ae80c2d22a93ed3a": {
+      "workers": {
+        "app/register/page": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fmac%2FDesktop%2Fkhezwo-v2%2Fapp%2Fregister%2Factions.ts%22%2C%5B%22register%22%5D%5D%5D&__client_imported__=!"
+      },
+      "layer": {
+        "app/register/page": "rsc"
+      }
+    }
+  },
+  "edge": {},
+  "encryptionKey": "kpFlBCDm+H2EAZFK8bh6gOi/82B0gLOTGvtHQHSs37o="
+}
