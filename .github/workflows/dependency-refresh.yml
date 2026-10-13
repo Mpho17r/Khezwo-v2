@@ -33,7 +33,9 @@ jobs:
           cache: npm
 
       - name: Upgrade patched framework and Tailwind dependencies
-        run: npm install --save-exact next@15.5 react@19.2 react-dom@19.2 qrcode.react@4.2.0 tailwindcss@4.3.3 @tailwindcss/postcss@4.3.3
+        run: |
+          npm pkg set 'overrides.next.postcss=8.5.10'
+          npm install --save-exact next@15.5 react@19.2 react-dom@19.2 qrcode.react@4.2.0 @supabase/ssr@0.7.0 postcss@8.5.10 tailwindcss@4.3.3 @tailwindcss/postcss@4.3.3
 
       - name: Apply non-breaking dependency security fixes
         run: npm audit fix || true
