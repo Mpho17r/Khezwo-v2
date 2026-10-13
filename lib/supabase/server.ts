@@ -2,7 +2,13 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export function createClient() {
-  const cookieStore = cookies();
+  // Next 15 keeps synchronous cookie access as a deprecated compatibility path.
+  // Keep this helper sync for existing server actions while we finish the migration;
+  // this cast only bridges Next 15's updated TypeScript signature.
+  const cookieStore = cookies() as unknown as {
+    get(name: string): { value: string } | undefined;
+    set(options: { name: string; value: string; [key: string]: unknown }): void;
+  };
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
