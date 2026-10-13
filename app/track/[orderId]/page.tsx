@@ -7,7 +7,7 @@ import type { Vendor, OrderStatus } from "@/lib/types";
 export default async function TrackOrderPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;
   // The route segment is an opaque tracking token, not the internal order UUID.
-  const supabase = createClient();
+  const supabase = await createClient();
   const [{ data: receiptData, error: receiptError }, { data: statusData, error: statusError }] =
     await Promise.all([
       supabase.rpc("get_public_order_receipt", { p_tracking_token: orderId }),
