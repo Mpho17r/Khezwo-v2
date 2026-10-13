@@ -1,5 +1,5 @@
 name: Security dependency refresh
-# Re-run after route-parameter compatibility fixes for Next.js 15.
+# Dependency updates are committed only after typecheck and production build pass.
 
 on:
   push:
@@ -34,6 +34,9 @@ jobs:
       - name: Refresh patched Next.js 15 and React 19 dependencies
         run: npm install --save-exact next@15.5 react@19.2 react-dom@19.2 qrcode.react@4.2.0
 
+      - name: Apply non-breaking dependency security fixes
+        run: npm audit fix || true
+
       - name: Capture dependency audit
         shell: bash
         run: |
@@ -45,6 +48,11 @@ jobs:
 
       - name: Production build
         run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: build-placeholder-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: build-placeholder-service-role-key
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
 
       - name: Commit verified dependency updates to security branch
         run: |
