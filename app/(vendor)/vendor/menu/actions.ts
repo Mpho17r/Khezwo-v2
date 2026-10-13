@@ -12,6 +12,10 @@ export async function addMenuItem(formData: FormData) {
 
   const name = String(formData.get("name") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
+  const itemType = String(formData.get("item_type") ?? "product");
+  if (itemType !== "product" && itemType !== "service") {
+    throw new Error("Choose a valid listing type.");
+  }
   const rawPrice = String(formData.get("price") ?? "").trim();
   const price = Number(rawPrice);
 
@@ -28,6 +32,7 @@ export async function addMenuItem(formData: FormData) {
   const supabase = await createClient();
   const { error } = await supabase.from("menu_items").insert({
     vendor_id: vendor.id,
+    item_type: itemType,
     name,
     description: description || null,
     price: Math.round(price * 100) / 100,
