@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { CartLine, MenuItem, PaymentMethod, Vendor } from "@/lib/types";
 import { formatZAR } from "@/lib/utils";
 import { placeOrder } from "./actions";
+import { ServiceEnquiryForm } from "./service-enquiry-form";
 import { ShoppingCart, Plus, Minus, X } from "lucide-react";
 
 export function MenuClient({ vendor, items }: { vendor: Vendor; items: MenuItem[] }) {
@@ -78,7 +79,7 @@ export function MenuClient({ vendor, items }: { vendor: Vendor; items: MenuItem[
       <div className="space-y-3 px-4 py-4 sm:px-6">
         {items.length === 0 ? (
           <p className="py-10 text-center text-sm text-neutral-400">
-            This menu is empty right now — check back soon.
+            No listings are available right now — check back soon.
           </p>
         ) : (
           items.map((item) => (
@@ -87,7 +88,7 @@ export function MenuClient({ vendor, items }: { vendor: Vendor; items: MenuItem[
               className="flex items-center justify-between gap-4 rounded-xl border border-neutral-100 bg-white p-3"
             >
               <div className="flex-1">
-                <p className="font-medium text-neutral-800">{item.name}</p>
+                <div className="flex flex-wrap items-center gap-2"><p className="font-medium text-neutral-800">{item.name}</p>{item.item_type === "service" && <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Service</span>}</div>
                 {item.description && (
                   <p className="text-sm text-neutral-500">{item.description}</p>
                 )}
@@ -103,7 +104,13 @@ export function MenuClient({ vendor, items }: { vendor: Vendor; items: MenuItem[
                   className="h-16 w-16 rounded-lg object-cover"
                 />
               )}
-              {item.is_available ? (
+              {item.item_type === "service" ? (
+                item.is_available ? (
+                  <ServiceEnquiryForm vendorId={vendor.id} itemId={item.id} primaryColor={vendor.primary_color} />
+                ) : (
+                  <span className="text-xs font-medium text-neutral-400">Unavailable</span>
+                )
+              ) : item.is_available ? (
                 cart[item.id] ? (
                   <div className="flex items-center gap-2">
                     <button onClick={() => changeQty(item.id, -1)} className="rounded-full border p-1">
