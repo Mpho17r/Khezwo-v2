@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
  * Middleware is useful for navigation, but is not an authorization boundary.
  */
 export async function requireAdmin() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
     error: userError,
