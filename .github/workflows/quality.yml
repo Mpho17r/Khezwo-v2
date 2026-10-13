@@ -46,7 +46,7 @@ jobs:
           node-version: 20
 
       - name: Upgrade Next.js and React within patched release lines
-        run: npm install --save-exact next@15.5 react@19.2 react-dom@19.2
+        run: npm install --save-exact next@15.5 react@19.2 react-dom@19.2 qrcode.react@4.2.0
 
       - name: Capture npm audit report
         shell: bash
