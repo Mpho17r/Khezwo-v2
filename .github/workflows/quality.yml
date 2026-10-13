@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/security-foundation
+      - feature/core-commerce
   pull_request:
     branches:
       - main
