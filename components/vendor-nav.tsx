@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
-import { LayoutGrid, UtensilsCrossed, Palette, BarChart3 } from "lucide-react";
+import { LayoutGrid, UtensilsCrossed, Palette, BarChart3, MessageSquareText } from "lucide-react";
 import { KhezwoLogo } from "./khezwo-logo";
 import { SaccharumWatermark } from "./saccharum-watermark";
 import { LogoutButton } from "./logout-button";
 
 const LINKS = [
   { href: "/vendor/dashboard", label: "Live orders", icon: LayoutGrid },
-  { href: "/vendor/menu", label: "Menu", icon: UtensilsCrossed },
+  { href: "/vendor/menu", label: "Products & services", icon: UtensilsCrossed },
+  { href: "/vendor/enquiries", label: "Service enquiries", icon: MessageSquareText },
   { href: "/vendor/branding", label: "Branding & QR", icon: Palette },
   { href: "/vendor/analytics", label: "Analytics", icon: BarChart3 },
 ];
