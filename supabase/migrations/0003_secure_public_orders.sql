@@ -50,7 +50,7 @@ create or replace function public.place_public_order(
   p_payment_method text,
   p_items jsonb
 )
-returns table (created_order_id uuid, created_tracking_token uuid, created_order_number integer)
+returns table (created_tracking_token uuid)
 language plpgsql
 security definer
 set search_path = public, pg_temp
@@ -115,11 +115,17 @@ begin
     end if;
     v_seen_ids := array_append(v_seen_ids, (v_item->>'menuItemId')::uuid);
 
+    v_notes := nullif(btrim(coalesce(v_item->>'notes', '')), '');
+    if v_notes is not null and length(v_notes) > 500 then
+      raise exception 'Item notes must be 500 characters or fewer.';
+    end if;
+
     select * into v_menu_item
     from public.menu_items
     where id = (v_item->>'menuItemId')::uuid
       and vendor_id = p_vendor_id
-      and is_available = true;
+      and is_available = true
+    for share;
 
     if not found then
       raise exception 'An item is unavailable or does not belong to this business.';
@@ -153,7 +159,8 @@ begin
     from public.menu_items
     where id = (v_item->>'menuItemId')::uuid
       and vendor_id = p_vendor_id
-      and is_available = true;
+      and is_available = true
+    for share;
 
     v_notes := nullif(btrim(coalesce(v_item->>'notes', '')), '');
     if v_notes is not null and length(v_notes) > 500 then
@@ -167,7 +174,7 @@ begin
     );
   end loop;
 
-  return query select v_order_id, v_tracking_token, v_order_number;
+  return query select v_tracking_token;
 end;
 $$;
 
