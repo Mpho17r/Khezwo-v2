@@ -76,8 +76,8 @@ export async function placeOrder({
     );
   }
 
+  // Only return the opaque tracking token to the customer-facing client.
   return {
-    orderId: data[0].created_order_id as string,
     trackingToken: data[0].created_tracking_token as string,
   };
 }
