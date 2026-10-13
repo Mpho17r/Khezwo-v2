@@ -43,7 +43,7 @@ export function MenuEditor({ items, freeTierLimit }: { items: MenuItem[]; freeTi
               setShowForm(false);
             });
           }}
-          className="mb-6 grid grid-cols-1 gap-3 rounded-2xl border border-neutral-200 bg-white p-4 sm:grid-cols-4"
+          className="mb-6 grid grid-cols-1 gap-3 rounded-2xl border border-neutral-200 bg-white p-4 sm:grid-cols-5"
         >
           <input
             name="name"
@@ -79,7 +79,7 @@ export function MenuEditor({ items, freeTierLimit }: { items: MenuItem[]; freeTi
           <input
             name="description"
             placeholder="Description (optional)"
-            className="rounded-lg border border-neutral-200 px-3 py-2 text-sm sm:col-span-4"
+            className="rounded-lg border border-neutral-200 px-3 py-2 text-sm sm:col-span-5"
           />
         </form>
       )}
