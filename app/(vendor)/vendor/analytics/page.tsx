@@ -6,7 +6,7 @@ export default async function VendorAnalyticsPage() {
   const vendor = await getCurrentVendor();
   if (!vendor) return null;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
