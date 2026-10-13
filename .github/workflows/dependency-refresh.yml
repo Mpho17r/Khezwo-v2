@@ -1,4 +1,5 @@
 name: Security dependency refresh
+# Re-run after route-parameter compatibility fixes for Next.js 15.
 
 on:
   push:
