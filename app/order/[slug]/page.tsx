@@ -7,7 +7,7 @@ import type { Vendor } from "@/lib/types";
 
 export default async function CustomerOrderPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: vendor } = await supabase
     .from("vendors")
