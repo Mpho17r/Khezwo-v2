@@ -3,6 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import type { CartLine, PaymentMethod } from "@/lib/types";
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export async function placeOrder({
   vendorId,
   customerName,
@@ -14,72 +16,68 @@ export async function placeOrder({
   paymentMethod: PaymentMethod;
   cart: CartLine[];
 }) {
-  if (!customerName.trim() || cart.length === 0) {
-    throw new Error("Add at least one item and your name before checking out.");
+  if (typeof vendorId !== "string" || !UUID_PATTERN.test(vendorId)) {
+    throw new Error("Invalid business.");
   }
 
-  const supabase = createClient();
-
-  const { data: vendor } = await supabase
-    .from("vendors")
-    .select("platform_fee_percent, status")
-    .eq("id", vendorId)
-    .single();
-
-  if (!vendor || vendor.status !== "active") {
-    throw new Error("This business isn't accepting orders right now.");
+  if (typeof customerName !== "string" || !customerName.trim() || customerName.trim().length > 120) {
+    throw new Error("Enter a name of 1 to 120 characters.");
   }
 
-  const subtotal = cart.reduce((sum, line) => sum + line.price * line.quantity, 0);
-  const platformFee = Math.round(subtotal * (vendor.platform_fee_percent / 100) * 100) / 100;
-  const total = subtotal + platformFee;
-
-  // Compute the next per-vendor order number. Note: under very high
-  // concurrent load this read-then-write has a small race window — for a
-  // production launch beyond this MVP, move this into a DB function/sequence.
-  const { data: lastOrder } = await supabase
-    .from("orders")
-    .select("order_number")
-    .eq("vendor_id", vendorId)
-    .order("order_number", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const orderNumber = (lastOrder?.order_number ?? 0) + 1;
-
-  const { data: order, error } = await supabase
-    .from("orders")
-    .insert({
-      vendor_id: vendorId,
-      order_number: orderNumber,
-      customer_name: customerName.trim(),
-      payment_method: paymentMethod,
-      subtotal,
-      platform_fee: platformFee,
-      total,
-      status: "received",
-    })
-    .select()
-    .single();
-
-  if (error || !order) {
-    throw new Error(error?.message ?? "Could not place order");
+  if (paymentMethod !== "cash" && paymentMethod !== "card") {
+    throw new Error("Choose a valid payment method.");
   }
 
-  const { error: itemsError } = await supabase.from("order_items").insert(
-    cart.map((line) => ({
-      order_id: order.id,
-      menu_item_id: line.menuItemId,
-      name_snapshot: line.name,
-      price_snapshot: line.price,
+  if (!Array.isArray(cart) || cart.length < 1 || cart.length > 50) {
+    throw new Error("Your order must contain between 1 and 50 cart lines.");
+  }
+
+  const safeCart = cart.map((line) => {
+    if (!line || typeof line !== "object") throw new Error("Invalid cart item.");
+    if (typeof line.menuItemId !== "string" || !UUID_PATTERN.test(line.menuItemId)) {
+      throw new Error("Invalid menu item.");
+    }
+    if (!Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > 50) {
+      throw new Error("Item quantities must be between 1 and 50.");
+    }
+    if (line.notes !== undefined && (typeof line.notes !== "string" || line.notes.length > 500)) {
+      throw new Error("Item notes must be 500 characters or fewer.");
+    }
+
+    // Browser-supplied names and prices are deliberately discarded.
+    return {
+      menuItemId: line.menuItemId,
       quantity: line.quantity,
-      notes: line.notes ?? null,
-    }))
-  );
+      notes: line.notes?.trim() || null,
+    };
+  });
 
-  if (itemsError) {
-    throw new Error(itemsError.message);
+  const ids = safeCart.map((line) => line.menuItemId);
+  if (new Set(ids).size !== ids.length) {
+    throw new Error("Please combine duplicate items before checking out.");
   }
 
-  return { orderId: order.id as string };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("place_public_order", {
+    p_vendor_id: vendorId,
+    p_customer_name: customerName.trim(),
+    p_payment_method: paymentMethod,
+    p_items: safeCart,
+  });
+
+  if (error || !Array.isArray(data) || !data[0]?.created_tracking_token) {
+    // Do not return database internals to an anonymous customer.
+    throw new Error(
+      error?.message?.includes("unavailable") || error?.message?.includes("not accepting")
+        ? "This business or one of your items is no longer available. Refresh the menu and try again."
+        : error?.message?.includes("quantity") || error?.message?.includes("cart")
+          ? "Please check your cart and try again."
+          : "We couldn't place your order. Please refresh and try again."
+    );
+  }
+
+  // Only return the opaque tracking token to the customer-facing client.
+  return {
+    trackingToken: data[0].created_tracking_token as string,
+  };
 }

@@ -1,8 +1,10 @@
+import { requireAdmin } from "@/lib/auth";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import type { Vendor } from "@/lib/types";
 import { VendorRow } from "./vendor-row";
 
 export default async function AdminVendorsPage() {
+  await requireAdmin();
   const supabase = createServiceRoleClient();
   const { data: vendors } = await supabase
     .from("vendors")

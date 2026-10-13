@@ -65,7 +65,7 @@ export function MenuClient({ vendor, items }: { vendor: Vendor; items: MenuItem[
         paymentMethod,
         cart: lines,
       });
-      router.push(`/order/${vendor.slug}/confirmation/${result.orderId}`);
+      router.push(`/order/${vendor.slug}/confirmation/${result.trackingToken}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
     } finally {

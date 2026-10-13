@@ -1,30 +1,27 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
-export function createClient() {
-  const cookieStore = cookies();
+type CookieToSet = { name: string; value: string; options: CookieOptions };
+
+export async function createClient() {
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
+        getAll() {
+          return cookieStore.getAll();
         },
-        set(name: string, value: string, options: CookieOptions) {
+        setAll(cookiesToSet: CookieToSet[]) {
           try {
-            cookieStore.set({ name, value, ...options });
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           } catch {
-            // Called from a Server Component — safe to ignore because
-            // middleware refreshes the session on every request.
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: "", ...options });
-          } catch {
-            // see note above
+            // Server Components cannot write cookies. Middleware refreshes sessions.
           }
         },
       },
@@ -32,12 +29,8 @@ export function createClient() {
   );
 }
 
-// A privileged client that bypasses RLS. Only ever import this inside
-// server actions / route handlers, never in client components, and only
-// for the specific platform-admin operations that genuinely need it
-// (e.g. listing every vendor regardless of who's logged in).
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-
+// This privileged client bypasses RLS. Import only in server-only modules/actions
+// and use only after server-side authorization has succeeded.
 export function createServiceRoleClient() {
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

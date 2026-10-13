@@ -1,7 +1,9 @@
+import { requireAdmin } from "@/lib/auth";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { formatZAR } from "@/lib/utils";
 
 export default async function AdminDashboardPage() {
+  await requireAdmin();
   const supabase = createServiceRoleClient();
 
   const [{ count: vendorCount }, { count: activeVendorCount }, { data: orders }] =

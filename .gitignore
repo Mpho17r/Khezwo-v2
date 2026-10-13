@@ -1,5 +1,12 @@
 node_modules/
 venv/
 .env
+.env.local
+.env.*.local
 .DS_Store
 *.log
+
+# Next.js generated output
+.next/
+out/
+.turbo/

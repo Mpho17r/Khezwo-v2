@@ -8,7 +8,7 @@ export default async function VendorMenuPage() {
   const vendor = await getCurrentVendor();
   if (!vendor) return null;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: items } = await supabase
     .from("menu_items")
     .select("*")

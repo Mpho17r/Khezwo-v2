@@ -1,0 +1,79 @@
+name: Security dependency refresh
+# Dependency updates are committed only after typecheck and production build pass. The SSR cookie adapter and PostCSS override are included in this verification.
+
+on:
+  push:
+    branches:
+      - feature/security-foundation
+    paths:
+      - ".github/workflows/dependency-refresh.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: security-dependency-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out security branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/security-foundation
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Upgrade patched framework and Tailwind dependencies
+        run: |
+          npm pkg set 'overrides.next.postcss=8.5.10'
+          npm install --save-exact next@15.5 react@19.2 react-dom@19.2 qrcode.react@4.2.0 @supabase/ssr@0.7.0 postcss@8.5.10 tailwindcss@4.3.3 @tailwindcss/postcss@4.3.3
+
+      - name: Apply non-breaking dependency security fixes
+        run: npm audit fix || true
+
+      - name: Capture dependency audit
+        shell: bash
+        run: |
+          npm audit --json > npm-audit-report.json || true
+          node -e "const a=require('./npm-audit-report.json'); console.log(JSON.stringify({metadata:a.metadata?.vulnerabilities, advisories:Object.entries(a.vulnerabilities||{}).map(([name,v])=>({name,severity:v.severity,range:v.range,fixAvailable:v.fixAvailable,via:(v.via||[]).map(x=>typeof x==='string'?x:{title:x.title,url:x.url,range:x.range})}))}, null, 2))" || true
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Production build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: build-placeholder-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: build-placeholder-service-role-key
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
+      - name: Commit verified dependency updates to security branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          if git diff --cached --quiet; then
+            echo "No dependency changes to commit."
+            exit 0
+          fi
+          git commit -m "security: upgrade Tailwind and refresh dependencies"
+          git push origin HEAD:feature/security-foundation
+
+      - name: Upload dependency audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit-report
+          path: npm-audit-report.json
+          if-no-files-found: warn
+          retention-days: 14

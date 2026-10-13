@@ -2,39 +2,52 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { Order, OrderStatus } from "@/lib/types";
+import type { OrderStatus } from "@/lib/types";
 import { ORDER_STATUS_FLOW, ORDER_STATUS_LABEL } from "@/lib/utils";
 import { Check } from "lucide-react";
 import clsx from "clsx";
 
+const VALID_STATUSES: OrderStatus[] = [
+  "received",
+  "preparing",
+  "ready",
+  "completed",
+  "cancelled",
+];
+
 export function OrderTracker({
-  orderId,
+  trackingToken,
   initialStatus,
   primaryColor,
 }: {
-  orderId: string;
+  trackingToken: string;
   initialStatus: OrderStatus;
   primaryColor: string;
 }) {
   const [status, setStatus] = useState<OrderStatus>(initialStatus);
-  const supabase = createClient();
 
   useEffect(() => {
-    const channel = supabase
-      .channel(`track-order-${orderId}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` },
-        (payload) => {
-          setStatus((payload.new as Order).status);
-        }
-      )
-      .subscribe();
+    const supabase = createClient();
+    let active = true;
+
+    async function refreshStatus() {
+      const { data, error } = await supabase.rpc("get_public_order_status", {
+        p_tracking_token: trackingToken,
+      });
+      if (!active || error || !Array.isArray(data) || !data[0]) return;
+
+      const next = data[0].status as OrderStatus;
+      if (VALID_STATUSES.includes(next)) setStatus(next);
+    }
+
+    void refreshStatus();
+    const intervalId = window.setInterval(() => void refreshStatus(), 5000);
 
     return () => {
-      supabase.removeChannel(channel);
+      active = false;
+      window.clearInterval(intervalId);
     };
-  }, [orderId, supabase]);
+  }, [trackingToken]);
 
   if (status === "cancelled") {
     return (
@@ -69,6 +82,7 @@ export function OrderTracker({
           );
         })}
       </ol>
+      <p className="mt-4 text-center text-xs text-neutral-400">Status checks every 5 seconds.</p>
     </div>
   );
 }
