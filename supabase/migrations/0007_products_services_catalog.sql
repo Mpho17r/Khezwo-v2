@@ -60,3 +60,27 @@ create policy "service enquiries: owner update own"
 create trigger service_enquiries_set_updated_at
 before update on public.service_enquiries
 for each row execute function public.set_updated_at();
+
+-- Defense in depth: the existing public checkout RPC is for products only.
+-- Reject service rows at the database boundary even if a caller bypasses the UI.
+create or replace function public.reject_service_order_item()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if new.menu_item_id is not null and exists (
+    select 1 from public.menu_items mi
+    where mi.id = new.menu_item_id and mi.item_type = 'service'
+  ) then
+    raise exception 'Service listings must use an enquiry, not product checkout.';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists order_items_reject_service_listing on public.order_items;
+create trigger order_items_reject_service_listing
+before insert or update of menu_item_id on public.order_items
+for each row execute function public.reject_service_order_item();
