@@ -15,15 +15,16 @@ type ReceiptItem = {
 export default async function OrderConfirmationPage({
   params,
 }: {
-  params: { slug: string; orderId: string };
+  params: Promise<{ slug: string; orderId: string }>;
 }) {
+  const { slug, orderId } = await params;
   const supabase = createClient();
   const { data, error } = await supabase.rpc("get_public_order_receipt", {
-    p_tracking_token: params.orderId,
+    p_tracking_token: orderId,
   });
   const receipt = Array.isArray(data) ? data[0] : null;
 
-  if (error || !receipt || receipt.vendor_slug !== params.slug) notFound();
+  if (error || !receipt || receipt.vendor_slug !== slug) notFound();
 
   const vendor = {
     name: receipt.vendor_name,
@@ -63,7 +64,7 @@ export default async function OrderConfirmationPage({
         </div>
 
         <Link
-          href={`/track/${params.orderId}`}
+          href={`/track/${orderId}`}
           className="mt-6 inline-block w-full rounded-lg py-3 text-sm font-semibold text-white"
           style={{ backgroundColor: receipt.vendor_primary_color }}
         >
