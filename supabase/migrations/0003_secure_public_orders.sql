@@ -26,6 +26,11 @@ create policy "orders: owner/admin update"
   using (owns_vendor(vendor_id) or is_admin())
   with check (owns_vendor(vendor_id) or is_admin());
 
+-- Vendors only need to advance order status from the application. Prevent
+-- direct client updates to totals, customer data, order number and tracking token.
+revoke update on public.orders from authenticated;
+grant update (status) on public.orders to authenticated;
+
 drop policy if exists "order_items: owner manage" on public.order_items;
 create policy "order_items: owner/admin read"
   on public.order_items for select
