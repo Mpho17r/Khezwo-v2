@@ -4,13 +4,14 @@ import { VendorBrandHeader, PoweredByKhezwo } from "@/components/vendor-brand-he
 import { OrderTracker } from "./tracker";
 import type { Vendor, OrderStatus } from "@/lib/types";
 
-export default async function TrackOrderPage({ params }: { params: { orderId: string } }) {
+export default async function TrackOrderPage({ params }: { params: Promise<{ orderId: string }> }) {
+  const { orderId } = await params;
   // The route segment is an opaque tracking token, not the internal order UUID.
   const supabase = createClient();
   const [{ data: receiptData, error: receiptError }, { data: statusData, error: statusError }] =
     await Promise.all([
-      supabase.rpc("get_public_order_receipt", { p_tracking_token: params.orderId }),
-      supabase.rpc("get_public_order_status", { p_tracking_token: params.orderId }),
+      supabase.rpc("get_public_order_receipt", { p_tracking_token: orderId }),
+      supabase.rpc("get_public_order_status", { p_tracking_token: orderId }),
     ]);
 
   const receipt = Array.isArray(receiptData) ? receiptData[0] : null;
@@ -37,7 +38,7 @@ export default async function TrackOrderPage({ params }: { params: { orderId: st
         </p>
 
         <OrderTracker
-          trackingToken={params.orderId}
+          trackingToken={orderId}
           initialStatus={status.status as OrderStatus}
           primaryColor={status.primary_color}
         />
