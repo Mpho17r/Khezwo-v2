@@ -28,7 +28,7 @@ export async function updateBranding(formData: FormData) {
     throw new Error("The closing message must be 500 characters or fewer.");
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const logoField = formData.get("logo");
   let logoUrl = vendor.logo_url;
 
