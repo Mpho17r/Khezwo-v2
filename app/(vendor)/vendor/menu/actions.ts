@@ -25,7 +25,7 @@ export async function addMenuItem(formData: FormData) {
     throw new Error("Enter a valid price between 0 and 99,999,999.");
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.from("menu_items").insert({
     vendor_id: vendor.id,
     name,
@@ -44,7 +44,7 @@ export async function toggleAvailability(itemId: string, isAvailable: boolean) {
   if (typeof itemId !== "string" || !UUID_PATTERN.test(itemId)) throw new Error("Invalid menu item.");
   if (typeof isAvailable !== "boolean") throw new Error("Invalid availability value.");
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("menu_items")
     .update({ is_available: isAvailable })
@@ -63,7 +63,7 @@ export async function deleteMenuItem(itemId: string) {
   if (!vendor) throw new Error("Sign in as a business owner to manage your menu.");
   if (typeof itemId !== "string" || !UUID_PATTERN.test(itemId)) throw new Error("Invalid menu item.");
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("menu_items")
     .delete()
