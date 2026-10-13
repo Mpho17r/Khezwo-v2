@@ -57,7 +57,7 @@ export async function placeOrder({
     throw new Error("Please combine duplicate items before checking out.");
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc("place_public_order", {
     p_vendor_id: vendorId,
     p_customer_name: customerName.trim(),
