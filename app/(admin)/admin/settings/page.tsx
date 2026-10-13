@@ -1,9 +1,11 @@
+import { requireAdmin } from "@/lib/auth";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { updatePlatformFee, addSponsorAd, toggleSponsorAd } from "./actions";
 import { SaccharumWatermark } from "@/components/saccharum-watermark";
 import Image from "next/image";
 
 export default async function AdminSettingsPage() {
+  await requireAdmin();
   const supabase = createServiceRoleClient();
   const { data: feeSetting } = await supabase
     .from("platform_settings")
