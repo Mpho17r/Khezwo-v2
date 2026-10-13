@@ -84,3 +84,11 @@ drop trigger if exists order_items_reject_service_listing on public.order_items;
 create trigger order_items_reject_service_listing
 before insert or update of menu_item_id on public.order_items
 for each row execute function public.reject_service_order_item();
+
+-- Least-privilege column grants: public callers cannot choose enquiry IDs,
+-- timestamps or status; vendors can update only the workflow status.
+revoke insert on public.service_enquiries from anon, authenticated;
+grant insert (vendor_id, menu_item_id, customer_name, contact_value, message)
+  on public.service_enquiries to anon, authenticated;
+revoke update on public.service_enquiries from authenticated;
+grant update (status) on public.service_enquiries to authenticated;
