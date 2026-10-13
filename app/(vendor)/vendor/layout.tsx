@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { VendorNav } from "@/components/vendor-nav";
 
 export default function VendorLayout({ children }: { children: React.ReactNode }) {
