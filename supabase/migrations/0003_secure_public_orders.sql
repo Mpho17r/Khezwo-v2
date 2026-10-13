@@ -14,6 +14,28 @@ drop policy if exists "orders: public read by id" on public.orders;
 drop policy if exists "order_items: public insert" on public.order_items;
 drop policy if exists "order_items: public read" on public.order_items;
 
+-- Orders and snapshots are created only by the validated checkout function.
+-- Vendors may read and update orders for their own business, but cannot forge
+-- orders or alter snapshot prices/items directly through the public table API.
+drop policy if exists "orders: owner read/update" on public.orders;
+create policy "orders: owner/admin read"
+  on public.orders for select
+  using (owns_vendor(vendor_id) or is_admin());
+create policy "orders: owner/admin update"
+  on public.orders for update
+  using (owns_vendor(vendor_id) or is_admin())
+  with check (owns_vendor(vendor_id) or is_admin());
+
+drop policy if exists "order_items: owner manage" on public.order_items;
+create policy "order_items: owner/admin read"
+  on public.order_items for select
+  using (
+    exists (
+      select 1 from public.orders o
+      where o.id = order_id and (owns_vendor(o.vendor_id) or is_admin())
+    )
+  );
+
 -- Public checkout accepts only item identifiers, quantities and optional notes.
 -- Prices and names are read from the database, and the entire order is written
 -- within one transaction (a function invocation).
