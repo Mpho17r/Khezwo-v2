@@ -40,6 +40,14 @@ begin
   values (p_user_id, 'vendor', btrim(p_business_name))
   on conflict (id) do nothing;
 
+  -- Never attach a vendor business to a privileged or otherwise non-vendor profile.
+  if exists (
+    select 1 from public.profiles p
+    where p.id = p_user_id and p.role <> 'vendor'
+  ) then
+    raise exception 'This account cannot be registered as a vendor.';
+  end if;
+
   -- Do not silently attach a second business or overwrite an existing account.
   if exists (select 1 from public.vendors v where v.owner_id = p_user_id) then
     raise exception 'A business is already registered for this account.';
