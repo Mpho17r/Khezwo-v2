@@ -1,4 +1,5 @@
 name: Security dependency refresh
+# Re-run after marking authenticated layouts dynamic for Next.js build validation.
 # Dependency updates are committed only after typecheck and production build pass.
 
 on:
