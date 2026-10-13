@@ -81,3 +81,50 @@ export async function placeOrder({
     trackingToken: data[0].created_tracking_token as string,
   };
 }
+
+
+export async function submitServiceEnquiry({
+  vendorId,
+  itemId,
+  customerName,
+  contactValue,
+  message,
+}: {
+  vendorId: string;
+  itemId: string;
+  customerName: string;
+  contactValue: string;
+  message: string;
+}) {
+  if (!UUID_PATTERN.test(vendorId) || !UUID_PATTERN.test(itemId)) {
+    throw new Error("Invalid business or service.");
+  }
+  const safeName = typeof customerName === "string" ? customerName.trim() : "";
+  const safeContact = typeof contactValue === "string" ? contactValue.trim() : "";
+  const safeMessage = typeof message === "string" ? message.trim() : "";
+
+  if (safeName.length < 1 || safeName.length > 120) {
+    throw new Error("Enter your name (up to 120 characters).");
+  }
+  if (safeContact.length < 3 || safeContact.length > 254 || /[<>]/.test(safeContact)) {
+    throw new Error("Enter a valid email address or phone number.");
+  }
+  if (safeMessage.length > 2000 || /<script/i.test(safeMessage)) {
+    throw new Error("Your message must be 2,000 characters or fewer.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("service_enquiries").insert({
+    vendor_id: vendorId,
+    menu_item_id: itemId,
+    customer_name: safeName,
+    contact_value: safeContact,
+    message: safeMessage,
+  });
+
+  if (error) {
+    throw new Error("We couldn't send your enquiry. Please refresh the page and try again.");
+  }
+
+  return { submitted: true };
+}
