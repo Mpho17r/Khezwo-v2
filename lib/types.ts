@@ -2,6 +2,7 @@ export type OrderStatus = "received" | "preparing" | "ready" | "completed" | "ca
 export type PaymentMethod = "cash" | "card";
 export type VendorPlan = "free" | "pro" | "enterprise";
 export type VendorStatus = "active" | "suspended";
+export type CatalogItemType = "product" | "service";
 export type UserRole = "vendor" | "admin";
 
 export interface Profile {
@@ -36,6 +37,7 @@ export interface MenuCategory {
 
 export interface MenuItem {
   id: string;
+  item_type: CatalogItemType;
   vendor_id: string;
   category_id: string | null;
   name: string;
@@ -78,4 +80,18 @@ export interface CartLine {
   price: number;
   quantity: number;
   notes?: string;
+}
+
+export type ServiceEnquiryStatus = "new" | "contacted" | "closed";
+
+export interface ServiceEnquiry {
+  id: string;
+  vendor_id: string;
+  menu_item_id: string;
+  customer_name: string;
+  contact_value: string;
+  message: string;
+  status: ServiceEnquiryStatus;
+  created_at: string;
+  updated_at: string;
 }
