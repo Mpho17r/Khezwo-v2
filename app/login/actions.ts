@@ -26,7 +26,7 @@ export async function login(formData: FormData) {
     redirect("/login?error=Enter+your+email+and+password");
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error, data } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error || !data.user) {
