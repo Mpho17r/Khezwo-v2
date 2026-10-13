@@ -2,11 +2,12 @@ import Link from "next/link";
 import { KhezwoLogo } from "@/components/khezwo-logo";
 import { login } from "./actions";
 
-export default function LoginPage({
+export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { error?: string; redirectTo?: string };
+  searchParams: Promise<{ error?: string; redirectTo?: string }>;
 }) {
+  const query = await searchParams;
   return (
     <main className="flex min-h-screen items-center justify-center bg-khezwo-cream px-6">
       <div className="w-full max-w-sm">
@@ -20,14 +21,14 @@ export default function LoginPage({
             For vendors and KheZwo admins.
           </p>
 
-          {searchParams?.error && (
+          {query.error && (
             <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-              {searchParams.error}
+              {query.error}
             </p>
           )}
 
           <form action={login} className="mt-5 space-y-3">
-            <input type="hidden" name="redirectTo" value={searchParams?.redirectTo ?? ""} />
+            <input type="hidden" name="redirectTo" value={query.redirectTo ?? ""} />
             <div>
               <label className="text-sm font-medium text-khezwo-ink">Email</label>
               <input
