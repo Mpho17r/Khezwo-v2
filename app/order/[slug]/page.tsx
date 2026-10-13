@@ -5,13 +5,14 @@ import { MenuClient } from "./menu-client";
 import { isVendorOpen } from "@/lib/utils";
 import type { Vendor } from "@/lib/types";
 
-export default async function CustomerOrderPage({ params }: { params: { slug: string } }) {
+export default async function CustomerOrderPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const supabase = createClient();
 
   const { data: vendor } = await supabase
     .from("vendors")
     .select("*")
-    .eq("slug", params.slug)
+    .eq("slug", slug)
     .eq("status", "active")
     .single();
 
