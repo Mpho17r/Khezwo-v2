@@ -57,6 +57,7 @@ create policy "service enquiries: owner update own"
   using (public.owns_vendor(vendor_id) or public.is_admin())
   with check (public.owns_vendor(vendor_id) or public.is_admin());
 
+drop trigger if exists service_enquiries_set_updated_at on public.service_enquiries;
 create trigger service_enquiries_set_updated_at
 before update on public.service_enquiries
 for each row execute function public.set_updated_at();
