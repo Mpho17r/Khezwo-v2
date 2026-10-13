@@ -18,7 +18,7 @@ export default async function OrderConfirmationPage({
   params: Promise<{ slug: string; orderId: string }>;
 }) {
   const { slug, orderId } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc("get_public_order_receipt", {
     p_tracking_token: orderId,
   });
