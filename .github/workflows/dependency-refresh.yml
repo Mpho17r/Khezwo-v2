@@ -1,5 +1,4 @@
 name: Security dependency refresh
-# Re-run after marking authenticated layouts dynamic for Next.js build validation.
 # Dependency updates are committed only after typecheck and production build pass.
 
 on:
@@ -19,7 +18,7 @@ concurrency:
 jobs:
   refresh-and-verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: Check out security branch
         uses: actions/checkout@v4
@@ -33,8 +32,8 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Refresh patched Next.js 15 and React 19 dependencies
-        run: npm install --save-exact next@15.5 react@19.2 react-dom@19.2 qrcode.react@4.2.0
+      - name: Upgrade patched framework and Tailwind dependencies
+        run: npm install --save-exact next@15.5 react@19.2 react-dom@19.2 qrcode.react@4.2.0 tailwindcss@4.3.3 @tailwindcss/postcss@4.3.3
 
       - name: Apply non-breaking dependency security fixes
         run: npm audit fix || true
@@ -65,7 +64,7 @@ jobs:
             echo "No dependency changes to commit."
             exit 0
           fi
-          git commit -m "security: upgrade Next.js and React to patched release lines"
+          git commit -m "security: upgrade Tailwind and refresh dependencies"
           git push origin HEAD:feature/security-foundation
 
       - name: Upload dependency audit report
