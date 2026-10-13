@@ -31,7 +31,7 @@ jobs:
           cache: npm
 
       - name: Refresh patched Next.js 15 and React 19 dependencies
-        run: npm install --save-exact next@15.5 react@19.2 react-dom@19.2
+        run: npm install --save-exact next@15.5 react@19.2 react-dom@19.2 qrcode.react@4.2.0
 
       - name: Capture dependency audit
         shell: bash
