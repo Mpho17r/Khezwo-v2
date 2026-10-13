@@ -1,145 +1,79 @@
 # KheZwo
 
-The most accessible, affordable digital ordering platform for South African
-small businesses. Scan a QR code → browse the menu → order → track.
+An accessible digital commerce platform for small businesses. Businesses can publish product listings, accept customer orders, and receive enquiries for services. Customers can browse a business storefront, place product orders, and track orders using a private tracking token.
 
 Built and operated by **Saccharum Technologies**.
+
+> **Current status:** development branch only. The security foundation and Stage 3 commerce changes have not been merged or deployed. Database migrations must be tested against a disposable Supabase project before production use.
 
 ---
 
 ## Stack
 
-- **Next.js 14** (App Router, TypeScript, Server Actions)
-- **Supabase** — Postgres database, Auth, Realtime, and Storage (free tier
-  comfortably covers an early-stage launch)
-- **Tailwind CSS**
-- Deploys cleanly to **Vercel** + **Supabase Cloud**
+- **Next.js 15** (App Router, TypeScript, Server Actions)
+- **Supabase** — Postgres, Auth, and Storage
+- **Tailwind CSS 4**
+- **Vercel + Supabase Cloud** deployment target
 
-This combination was chosen specifically because it needs no servers to
-manage, has a generous free tier, and gives you auth + a live database +
-file storage + realtime order updates out of the box — important for a
-bootstrapped MVP.
+## Brand rules
 
----
+| Surface | Branding |
+|---|---|
+| Landing, registration and vendor dashboard | KheZwo |
+| Customer storefront and order tracking | The vendor's own logo and colours |
+| Customer footer | Small “Powered by KheZwo” credit |
+| Platform administration | Saccharum Technologies watermark and platform-level reporting |
 
-## Brand rules baked into the code
-
-This matters enough to call out explicitly, because it's encoded directly
-in components rather than left as a styling convention:
-
-| Where | What shows | Component |
-|---|---|---|
-| Landing / registration page | **KheZwo** logo, full size | `<KhezwoLogo />` |
-| Vendor dashboard | **KheZwo** logo (sidebar) | `<KhezwoLogo />` in `VendorNav` |
-| Admin dashboard | **KheZwo** logo (sidebar) | `<KhezwoLogo />` in `AdminNav` |
-| Customer menu / tracking pages | The **vendor's own** logo & colors | `<VendorBrandHeader />` |
-| Customer pages (footer only) | Tiny "Powered by KheZwo" credit | `<PoweredByKhezwo />` |
-| Everywhere (footer / admin settings) | Small **Saccharum Technologies** watermark | `<SaccharumWatermark />` |
-| Admin → Platform settings | Full Saccharum section — this is where all platform-level reporting belongs | — |
-
-KheZwo is the face customers never really need to notice. Vendors and admins
-see it constantly (it's their tool). Saccharum is the legal entity behind
-everything, but stays a quiet credit, never the headline.
-
-If you extend the UI, keep using these four components rather than dropping
-logos in directly — it keeps the rule from drifting as the app grows.
+Keep using the shared logo, vendor-branding, and Saccharum watermark components rather than introducing one-off logo markup.
 
 ---
 
-## Getting started locally
+## Local setup
 
-1. **Create a Supabase project** at supabase.com (free tier is fine).
-2. In the SQL Editor, run `supabase/migrations/0001_init.sql`. This creates
-   every table, RLS policy, and the `vendor-assets` storage bucket.
-3. Copy `.env.example` to `.env.local` and fill in your project's URL and
-   keys (Project Settings → API).
-4. Install dependencies and run:
+1. Create a **disposable Supabase development project**. Do not start with production.
+2. Apply the SQL files in `supabase/migrations/` in numerical order, from `0001_init.sql` onward. Review each migration first.
+3. Copy `.env.example` to `.env.local` and fill in the Supabase URL and keys.
+4. Install dependencies and start the app:
    ```bash
-   npm install
+   npm ci
    npm run dev
    ```
-5. Visit `http://localhost:3000`, click **Register your business**, and
-   create your first vendor account.
-6. To make yourself a platform admin (so you can see `/admin`), run this in
-   the Supabase SQL Editor:
-   ```sql
-   update profiles set role = 'admin' where id = '<your-auth-user-uuid>';
-   ```
-   (Find your user's UUID under Authentication → Users.)
+5. Register a test business and exercise the vendor and customer journeys.
+6. Keep email confirmation enabled when validating the production-like registration flow; separately test the confirmation-disabled path.
 
-By default Supabase requires email confirmation on sign-up. For faster local
-testing, turn it off under Authentication → Providers → Email → "Confirm
-email", then re-enable it before going live.
+**Important:** the migrations have not yet been validated end-to-end against a disposable database. Do not apply them to production until RLS, RPC permissions, storage ownership, and registration/checkout flows have been tested.
 
 ---
 
-## Deploying
+## Current functionality
 
-1. Push this repo to GitHub.
-2. Import it into **Vercel**, add the same environment variables from
-   `.env.local`.
-3. Set `NEXT_PUBLIC_SITE_URL` to your real domain — this is used to build
-   the QR code links and tracking URLs vendors print out.
-4. Deploy. Supabase needs no separate deployment; it's already cloud-hosted.
+- Vendor registration and login with Supabase Auth.
+- Vendor dashboard for incoming orders and order status updates.
+- Product catalogue management, including availability controls and a 20-listing Free-plan UI limit.
+- Service listings with a customer enquiry form.
+- Vendor service-enquiry inbox with New → Contacted → Closed status tracking.
+- Vendor branding, logo upload, colours, closing message, and QR code.
+- Product checkout with database-authoritative prices and opaque-token order tracking in the security-foundation branch.
+- Platform admin dashboard, vendor suspension/reactivation, platform-fee settings, and sponsor-ad slots.
+
+The service-enquiry feature is introduced in migration `0007_products_services_catalog.sql`. It adds product/service listing types, a private enquiry table, row-level policies, restricted column grants, and a database guard that prevents service listings from entering product checkout.
 
 ---
 
-## What's fully working
+## Not yet complete
 
-- Vendor registration & login (Supabase Auth)
-- Vendor dashboard with **live, realtime order updates** (no polling)
-- One-click order status flow: Received → Preparing → Ready → Completed
-- Menu management (add / edit availability / delete), with the Free plan's
-  20-item cap enforced in the UI
-- Branding page: vendor logo upload (Supabase Storage), brand colors,
-  closing message, and a **generated QR code** linking straight to their
-  menu — copy link or screenshot the SVG to print
-- Public customer ordering flow: browse → cart → checkout (name + cash/card
-  choice) → confirmation with order number → live tracking page
-- Admin dashboard: platform-wide stats, vendor list with suspend/reactivate,
-  platform fee % control, simple sponsor-ad slots
-- Row Level Security on every table, so vendors can only ever touch their
-  own data, and the public can only read what a customer should see
+- **Database security verification:** run the migrations and test RLS, RPC execute grants, storage ownership, registration, checkout, tracking and enquiry privacy against a disposable Supabase project.
+- **Service-enquiry notifications:** vendors can view and update enquiry status in the dashboard, but email/SMS/WhatsApp notifications are not wired up.
+- **Payments:** the cash/card choice is not a live card-payment integration. Add a payment gateway only after choosing a provider and opening a merchant account.
+- **Subscription billing:** Free / Pro / Enterprise plans are represented in the data model, but paid subscription checkout and entitlement enforcement are not complete.
+- **Currency and regional settings:** the current commerce experience is still South Africa-oriented and uses ZAR formatting.
+- **Product improvements:** category grouping, richer product images, availability scheduling, and more complete business onboarding remain future work.
+- **Scale and operations:** public checkout and enquiry rate limiting, observability, backup/restore drills, and production incident procedures still need attention.
 
-## What's intentionally stubbed (next phases)
+---
 
-These are real product decisions, not oversights — each needs an external
-account/contract before it can be wired up for real:
+## Validation
 
-- **Card payments**: the UI captures "cash" or "card" but doesn't process
-  card payments yet. Wire up a South African gateway (PayFast, Yoco, or
-  Paystack) inside `app/order/[slug]/actions.ts` once you have a merchant
-  account.
-- **Subscription billing** (Free / Pro / Enterprise): plan is stored on the
-  vendor row but there's no checkout flow yet — add this once you've chosen
-  a billing provider (PayFast subscriptions, Paddle, etc).
-- **Google AdSense**: a `adsense_enabled` flag already exists in
-  `platform_settings`; drop in your AdSense script once you have an account.
-- **Multi-branch / staff accounts** (Enterprise tier): the schema supports
-  adding a `branch_id`-style column later, but it isn't modeled yet.
-- **SMS/WhatsApp order alerts**: vendors currently get sound + visual alerts
-  in-browser only.
-- A new-order sound file is referenced at `public/notification.mp3` — add a
-  short audio clip there (see `public/README-ASSETS.txt`).
-- **Menu categories**: the `menu_categories` table exists in the schema, but
-  the vendor menu editor currently lists items flat (no category grouping in
-  the UI yet). Wire it up if you want sectioned menus (Starters / Mains /
-  Drinks etc).
+GitHub Actions runs TypeScript checks and a production build for the active feature branches. A successful build confirms the app compiles; it does **not** prove that database migrations, RLS policies, or RPC permissions are correct.
 
-## Honest note on this build
-
-This codebase was written and assembled in an environment without internet
-access, so it could not be `npm install`'d or `next build`'d to confirm it
-compiles cleanly end-to-end before being handed to you. The code follows the
-standard, documented Next.js App Router + Supabase SSR patterns throughout,
-but please run `npm install && npm run dev` (or `npm run build`) yourself as
-the first step, and treat any error that surfaces as a normal part of
-bringing a fresh project online rather than a sign something is fundamentally
-wrong with the architecture.
-
-## A note on order tracking security
-
-Tracking links use the order's UUID as the access control (hard to guess,
-but not cryptographically private). That's a reasonable trade-off for an
-MVP. Before a large-scale launch, consider replacing it with a short signed
-token so tracking links can't theoretically be enumerated.
+Security work remains in the separate draft pull request. Stage 3 commerce work is kept on `feature/core-commerce` so it does not get mixed into the security pull request prematurely.
