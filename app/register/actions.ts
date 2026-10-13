@@ -14,7 +14,7 @@ export async function register(formData: FormData) {
     redirect("/register?error=Please+check+your+details+and+try+again");
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
     email,
     password,
