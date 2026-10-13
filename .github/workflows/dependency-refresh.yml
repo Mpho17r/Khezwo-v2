@@ -1,5 +1,5 @@
 name: Security dependency refresh
-# Dependency updates are committed only after typecheck and production build pass.
+# Dependency updates are committed only after typecheck and production build pass. The SSR cookie adapter and PostCSS override are included in this verification.
 
 on:
   push:
