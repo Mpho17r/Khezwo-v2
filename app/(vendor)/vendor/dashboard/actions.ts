@@ -30,7 +30,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
   ];
   if (!validStatuses.includes(status)) throw new Error("Invalid order status.");
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: order, error: lookupError } = await supabase
     .from("orders")
     .select("status")
