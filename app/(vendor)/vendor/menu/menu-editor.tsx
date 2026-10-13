@@ -24,7 +24,7 @@ export function MenuEditor({ items, freeTierLimit }: { items: MenuItem[]; freeTi
           className="flex items-center gap-1.5 rounded-lg bg-khezwo-ink px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Plus size={16} />
-          Add item
+          Add listing
         </button>
       </div>
 
@@ -51,6 +51,15 @@ export function MenuEditor({ items, freeTierLimit }: { items: MenuItem[]; freeTi
             required
             className="rounded-lg border border-neutral-200 px-3 py-2 text-sm sm:col-span-2"
           />
+          <select
+            name="item_type"
+            defaultValue="product"
+            className="rounded-lg border border-neutral-200 px-3 py-2 text-sm"
+            aria-label="Listing type"
+          >
+            <option value="product">Product</option>
+            <option value="service">Service</option>
+          </select>
           <input
             name="price"
             type="number"
@@ -78,7 +87,7 @@ export function MenuEditor({ items, freeTierLimit }: { items: MenuItem[]; freeTi
       <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
         {items.length === 0 ? (
           <p className="p-6 text-center text-sm text-neutral-400">
-            No menu items yet — add your first one above.
+            No listings yet — add your first product or service above.
           </p>
         ) : (
           <table className="w-full text-sm">
@@ -94,7 +103,7 @@ export function MenuEditor({ items, freeTierLimit }: { items: MenuItem[]; freeTi
               {items.map((item) => (
                 <tr key={item.id} className="border-t border-neutral-100">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-khezwo-ink">{item.name}</p>
+                    <div className="flex flex-wrap items-center gap-2"><p className="font-medium text-khezwo-ink">{item.name}</p><span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-500">{item.item_type ?? "product"}</span></div>
                     {item.description && (
                       <p className="text-xs text-neutral-400">{item.description}</p>
                     )}
