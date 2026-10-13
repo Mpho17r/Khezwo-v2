@@ -1,0 +1,67 @@
+name: Security dependency refresh
+
+on:
+  push:
+    branches:
+      - feature/security-foundation
+    paths:
+      - ".github/workflows/dependency-refresh.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: security-dependency-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out security branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/security-foundation
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Refresh patched Next.js 15 and React 19 dependencies
+        run: npm install --save-exact next@15.5 react@19.2 react-dom@19.2
+
+      - name: Capture dependency audit
+        shell: bash
+        run: |
+          npm audit --json > npm-audit-report.json || true
+          node -e "const a=require('./npm-audit-report.json'); console.log(JSON.stringify({metadata:a.metadata?.vulnerabilities, advisories:Object.keys(a.vulnerabilities||{})}, null, 2))" || true
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Production build
+        run: npm run build
+
+      - name: Commit verified dependency updates to security branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          if git diff --cached --quiet; then
+            echo "No dependency changes to commit."
+            exit 0
+          fi
+          git commit -m "security: upgrade Next.js and React to patched release lines"
+          git push origin HEAD:feature/security-foundation
+
+      - name: Upload dependency audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit-report
+          path: npm-audit-report.json
+          if-no-files-found: warn
+          retention-days: 14
