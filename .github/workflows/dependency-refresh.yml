@@ -19,6 +19,7 @@ concurrency:
 jobs:
   refresh-and-verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Check out security branch
         uses: actions/checkout@v4
@@ -50,7 +51,7 @@ jobs:
       - name: Production build
         run: npm run build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
           NEXT_PUBLIC_SUPABASE_ANON_KEY: build-placeholder-anon-key
           SUPABASE_SERVICE_ROLE_KEY: build-placeholder-service-role-key
           NEXT_PUBLIC_SITE_URL: http://localhost:3000
